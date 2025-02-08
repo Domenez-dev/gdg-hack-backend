@@ -19,9 +19,9 @@ client.login(process.env.DISCORD_TOKEN);
 
 // Session setup
 app.use(session({
-  secret: 'your_secret_key',
-  resave: false,
-  saveUninitialized: false,
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
 }));
 
 // Passport setup
