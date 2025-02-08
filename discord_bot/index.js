@@ -68,24 +68,6 @@ app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
 
-//get roles te3 el user
-
-app.get('/user/:userId/roles', async (req, res) => {
-    const { userId } = req.params;
-    const guild = client.guilds.cache.get(GUILD_ID);
-    const member = await guild.members.fetch(userId);
-  
-    if (!member) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-  
-    const roles = member.roles.cache.map(role => ({
-      id: role.id,
-      name: role.name,
-    }));
-  
-    res.json({ roles });
-  });
 
 
 //ajouter role 
@@ -151,26 +133,51 @@ app.post('/roles', async (req, res) => {
 
 
 //middleware te3 roles 
+// ...existing code...
 
-const checkRole = (roleId) => (req, res, next) => {
-    if (!req.isAuthenticated()) {
-      return res.redirect('/login');
+const allowedRoles = ["Co-Manager", "HR", "Human Resources", "DEV", "Development", "COM", "Communication", "VIS", "visuals", "LOG", "Logistics", "RLX", "External Relations"];
+
+const checkRole = (req, res, next) => {
+  if (!req.isAuthenticated()) {
+    return res.redirect('/login');
+  }
+
+  const guild = client.guilds.cache.get(process.env.GUILD_ID);
+  guild.members.fetch(req.user.id).then((member) => {
+    const hasAccess = member.roles.cache.some(role => role.name === 'Co-Manager' || role.name === 'HR');
+    if (hasAccess) {
+      next();
+    } else {
+      res.status(403).send('You do not have permission to access this page.');
     }
-  
-    const guild = client.guilds.cache.get(process.env.GUILD_ID);
-    guild.members.fetch(req.user.id).then((member) => {
-      if (member.roles.cache.has(roleId)) {
-        next();
-      } else {
-        res.status(403).send('You do not have permission to access this page.');
-      }
-    }).catch((err) => {
-      console.error(err);
-      res.status(500).send('An error occurred while fetching user roles.');
-    });
-  };
-  
-  // Example route for users with a specific role
-  app.get('/admin', checkRole('ADMIN_ROLE_ID'), (req, res) => {
-    res.send('Welcome, admin!');
+  }).catch((err) => {
+    console.error(err);
+    res.status(500).send('An error occurred while fetching user roles.');
   });
+};
+
+// Example route for users with a specific role
+app.get('/admin', checkRole, (req, res) => {
+  res.send('Welcome, admin!');
+});
+
+// Get roles of the user
+app.get('/user/:userId/roles', async (req, res) => {
+  const { userId } = req.params;
+  const guild = client.guilds.cache.get(process.env.GUILD_ID);
+  const member = await guild.members.fetch(userId);
+
+  if (!member) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+
+  const roles = member.roles.cache
+    .filter(role => allowedRoles.includes(role.name))
+    .map(role => ({
+      id: role.id,
+      name: role.name,
+    }));
+
+  res.json({ roles });
+});
+
