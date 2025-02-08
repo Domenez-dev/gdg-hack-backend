@@ -68,6 +68,24 @@ app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
 
+//get ALL roles te3 el user
+
+app.get('/user/:userId/allRoles', async (req, res) => {
+    const { userId } = req.params;
+    const guild = client.guilds.cache.get(GUILD_ID);
+    const member = await guild.members.fetch(userId);
+  
+    if (!member) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+  
+    const roles = member.roles.cache.map(role => ({
+      id: role.id,
+      name: role.name,
+    }));
+  
+    res.json({ roles });
+  });
 
 
 //ajouter role 
@@ -133,7 +151,6 @@ app.post('/roles', async (req, res) => {
 
 
 //middleware te3 roles 
-// ...existing code...
 
 const allowedRoles = ["Co-Manager", "HR", "Human Resources", "DEV", "Development", "COM", "Communication", "VIS", "visuals", "LOG", "Logistics", "RLX", "External Relations"];
 
