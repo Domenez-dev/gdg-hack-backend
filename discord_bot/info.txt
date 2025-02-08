@@ -1,0 +1,4 @@
+bsh t3ayet lel authentification felfront just do haka :
+<a href="/auth/discord">Login with Discord</a>
+
+and u style it ofc
